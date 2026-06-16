@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#1D9E75" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="고려퀴즈" />
+  <meta name="description" content="중학교 3학년 고려시대 한국사 퀴즈 — 객관식·주관식 무한 반복" />
+  <title>고려시대 한국사 퀴즈</title>
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+
+<div class="app">
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="header-top">
+      <div class="header-icon">🏯</div>
+      <div class="header-text">
+        <h1>고려시대 한국사 퀴즈</h1>
+        <p>중학교 3학년 · 고려 건국~멸망 · 무한 반복</p>
+      </div>
+      <div class="streak" id="streak-badge"></div>
+    </div>
+    <nav class="tabs" role="tablist">
+      <button class="tab-btn" id="tab-obj" role="tab" onclick="switchTab('obj')">📝 객관식</button>
+      <button class="tab-btn" id="tab-sub" role="tab" onclick="switchTab('sub')">✏️ 주관식</button>
+    </nav>
+  </header>
+
+  <!-- STATS -->
+  <section class="stats" aria-label="현재 통계">
+    <div class="stat-card">
+      <div class="stat-label">맞음</div>
+      <div class="stat-value" id="s-correct">0</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">틀림</div>
+      <div class="stat-value" id="s-wrong">0</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">총 문제</div>
+      <div class="stat-value" id="s-total">0</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">정답률</div>
+      <div class="stat-value" id="s-rate">—</div>
+    </div>
+  </section>
+
+  <!-- DIFFICULTY -->
+  <div class="diff-section">
+    <div class="diff-meta">
+      <span>난이도: <span id="diff-name">쉬움</span></span>
+      <span id="diff-stars-bar">★☆☆☆☆☆☆</span>
+    </div>
+    <div class="diff-track">
+      <div class="diff-fill" id="diff-fill" style="width: 14%;"></div>
+    </div>
+  </div>
+
+  <!-- QUESTION -->
+  <main class="q-scroll" id="q-area" role="main"></main>
+
+  <!-- NEXT BUTTON -->
+  <div class="bottom-bar">
+    <button class="next-btn obj" id="next-btn" onclick="nextQ()">다음 문제 →</button>
+  </div>
+
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="./questions.js"></script>
+<script src="./app.js"></script>
+</body>
+</html>
