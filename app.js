@@ -12,6 +12,7 @@ let state = {
   used: { obj: [], sub: [] },
   stats: { obj: { c:0, w:0, t:0 }, sub: { c:0, w:0, t:0 } },
   streak: 0,
+  soundOn: true,
 };
 
 // ── DOM refs ──
@@ -19,6 +20,72 @@ const $ = (id) => document.getElementById(id);
 const qArea   = $('q-area');
 const nextBtn = $('next-btn');
 const toast   = $('toast');
+
+// ── Sound Engine (Web Audio API) ──
+let audioCtx = null;
+
+function getAudioCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+
+function playTone(config) {
+  if (!state.soundOn) return;
+  try {
+    const ctx = getAudioCtx();
+    config.forEach(({ freq, start, dur, type = 'sine', gain = 0.3 }) => {
+      const osc = ctx.createOscillator();
+      const vol = ctx.createGain();
+      osc.connect(vol);
+      vol.connect(ctx.destination);
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, ctx.currentTime + start);
+      vol.gain.setValueAtTime(gain, ctx.currentTime + start);
+      vol.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + start + dur);
+      osc.start(ctx.currentTime + start);
+      osc.stop(ctx.currentTime + start + dur);
+    });
+  } catch(e) {}
+}
+
+function soundCorrect() {
+  playTone([
+    { freq: 523, start: 0,    dur: 0.12, type: 'triangle', gain: 0.25 },
+    { freq: 659, start: 0.1,  dur: 0.12, type: 'triangle', gain: 0.25 },
+    { freq: 784, start: 0.2,  dur: 0.22, type: 'triangle', gain: 0.28 },
+  ]);
+}
+
+function soundWrong() {
+  playTone([
+    { freq: 300, start: 0,    dur: 0.15, type: 'sawtooth', gain: 0.18 },
+    { freq: 220, start: 0.15, dur: 0.22, type: 'sawtooth', gain: 0.15 },
+  ]);
+}
+
+function soundStreak() {
+  playTone([
+    { freq: 523, start: 0,    dur: 0.09, type: 'triangle', gain: 0.22 },
+    { freq: 659, start: 0.09, dur: 0.09, type: 'triangle', gain: 0.22 },
+    { freq: 784, start: 0.18, dur: 0.09, type: 'triangle', gain: 0.22 },
+    { freq: 1047,start: 0.27, dur: 0.22, type: 'triangle', gain: 0.28 },
+  ]);
+}
+
+function soundTab() {
+  playTone([{ freq: 440, start: 0, dur: 0.1, type: 'sine', gain: 0.15 }]);
+}
+
+function soundNext() {
+  playTone([{ freq: 380, start: 0, dur: 0.08, type: 'sine', gain: 0.12 }]);
+}
+
+// ── Sound toggle ──
+function toggleSound() {
+  state.soundOn = !state.soundOn;
+  $('sound-btn').textContent = state.soundOn ? '🔊' : '🔇';
+  if (state.soundOn) playTone([{ freq: 660, start: 0, dur: 0.1, type: 'sine', gain: 0.2 }]);
+}
 
 // ── Question picking ──
 function getLevel(tab) {
@@ -45,6 +112,7 @@ function pickQ(tab) {
 
 // ── Tab switch ──
 function switchTab(tab) {
+  if (tab !== state.tab) soundTab();
   state.tab = tab;
   state.answered = false;
 
@@ -142,6 +210,9 @@ function recordResult(ok, explain, correctAns) {
   const s   = state.stats[tab];
   s.t++;
   if (ok) { s.c++; state.streak++; } else { s.w++; state.streak = 0; }
+
+  if (ok) soundCorrect(); else soundWrong();
+
   updateStats();
 
   const fb = $('feedback');
@@ -155,7 +226,8 @@ function recordResult(ok, explain, correctAns) {
 
   nextBtn.style.display = 'block';
 
-  if (state.streak > 0 && state.streak % 3 === 0) {
+  if (ok && state.streak > 0 && state.streak % 3 === 0) {
+    setTimeout(soundStreak, 350);
     showToast(`🔥 ${state.streak}연속 정답!`);
   }
 }
@@ -173,7 +245,7 @@ function updateStats() {
   const pct   = Math.round((level - 1) / 6 * 100);
   $('diff-fill').style.width      = pct + '%';
   $('diff-fill').style.background = DIFF_COLORS[level] || '#1D9E75';
-  $('diff-name').textContent  = DIFF_NAMES[level] || '';
+  $('diff-name').textContent      = DIFF_NAMES[level] || '';
   $('diff-stars-bar').textContent = DIFF_STARS(level);
 
   const streak = $('streak-badge');
@@ -187,6 +259,7 @@ function updateStats() {
 
 // ── Next question ──
 function nextQ() {
+  soundNext();
   state.cur = pickQ(state.tab);
   renderQ();
   updateStats();
@@ -196,7 +269,7 @@ function nextQ() {
 function showToast(msg) {
   toast.textContent = msg;
   toast.classList.add('show');
-  setTimeout(() => toast.classList.remove('show'), 2000);
+  setTimeout(() => toast.classList.remove('show'), 2200);
 }
 
 // ── Init ──
